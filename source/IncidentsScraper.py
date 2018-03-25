@@ -13,6 +13,7 @@ def get_incidents_dataframe():
 
     try:
         print('Scraping traffic incidents on ' + datetime.datetime.today().strftime('%d-%m-%Y') + '\n')
+        url = find_all_incidents_link()
         html = urlopen(url)
         soup = BeautifulSoup(html, "lxml")
 
@@ -33,6 +34,14 @@ def get_incidents_dataframe():
     except ValueError as error:
         print(error)
         return 0
+
+
+def find_all_incidents_link():
+    url = 'http://infocar.dgt.es/etraffic/'
+    html = urlopen(url)
+    soup = BeautifulSoup(html, "lxml")
+    incidents_link = soup.findAll('div', id='verIncidencias')[0].findNext('a', href=True)
+    return url + incidents_link['href']
 
 
 def dataset_to_csv(dataset):
