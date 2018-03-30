@@ -1,19 +1,17 @@
 import datetime
+import getopt
+import sys
 from urllib.request import urlopen
 
 import pandas as pd
 from bs4 import BeautifulSoup
 
 
-def get_incidents_dataframe():
-    url = 'http://infocar.dgt.es/etraffic/Incidencias?ca=&provIci=&caracter=acontecimiento&accion_consultar=Consultar' \
-          '&IncidenciasRETENCION=IncidenciasRETENCION&IncidenciasPUERTOS=IncidenciasPUERTOS&IncidenciasMETEOROLOGICA' \
-          '=IncidenciasMETEOROLOGICA&IncidenciasEVENTOS=IncidenciasEVENTOS&IncidenciasOTROS=IncidenciasOTROS' \
-          '&IncidenciasRESTRICCIONES=IncidenciasRESTRICCIONES&ordenacion=provincia-ASC%2Cpoblacion-ASC '
-
+def get_incidents_dataframe(province):
     try:
         print('Scraping traffic incidents on ' + datetime.datetime.today().strftime('%d-%m-%Y') + '\n')
         url = find_all_incidents_link()
+        url = filter_by_province(url, province)
         html = urlopen(url)
         soup = BeautifulSoup(html, "lxml")
 
@@ -37,6 +35,7 @@ def get_incidents_dataframe():
 
 
 def find_all_incidents_link():
+    # buscar url
     url = 'http://infocar.dgt.es/etraffic/'
     html = urlopen(url)
     soup = BeautifulSoup(html, "lxml")
@@ -44,12 +43,38 @@ def find_all_incidents_link():
     return url + incidents_link['href']
 
 
+def filter_by_province(url, province):
+    # concatenar filtres
+    if province is None:
+        return url
+    else:
+        return '%s&provIci=%s' % (url, province)
+
+
 def dataset_to_csv(dataset):
+    # exportar a csv
     date = datetime.datetime.today().strftime('%Y%m%d')
     dataset.to_csv('incidentes_' + date + '.csv', sep=',', encoding='UTF-8')
 
 
-if __name__ == "__main__":
-    dataset = get_incidents_dataframe()
+def main(argv):
+    province = None
+    try:
+        opts, args = getopt.getopt(argv, "hp:", ["province="])
+    except getopt.GetoptError:
+        print('IncidentsScraper.py -p <province>')
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print('test.py -p <province>')
+            sys.exit()
+        elif opt in ("-p", "--province"):
+            province = arg
+
+    dataset = get_incidents_dataframe(province)
     print(dataset.to_string())
     dataset_to_csv(dataset)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
