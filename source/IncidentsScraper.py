@@ -66,7 +66,7 @@ def main(argv):
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('test.py -p <province>')
+            print('IncidentsScraper.py -p <province>')
             sys.exit()
         elif opt in ("-p", "--province"):
             province = arg
